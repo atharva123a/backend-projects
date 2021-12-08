@@ -4,10 +4,19 @@
 // init project
 var express = require('express');
 var app = express();
+// use the newsAPI key:
 const myKey = process.env['KEY']
+const newsAPI = require('newsapi');
+// create new instance of object:
+const newsapi = new newsAPI(myKey);
+
 //use body-parser to parse data from requests:
 const bodyParser = require('body-parser');
 app.use(bodyParser.urlencoded({extended : true}));
+
+
+// timeout function to return if the message timed out:
+const TIMEOUT = 10000; // 10seconds:
 
 // enable CORS 
 // so that your API is remotely testable 
@@ -23,12 +32,22 @@ app.get("/", function (req, res) {
 
 
 // your first API endpoint... 
-app.post("/api/hello", (req, res)=>{
-    let s = req.body;
-    console.log(s)
-    res.json("hi")
-});
+app.get("/api/news", async(req, res, next)=>{
+    let t = setTimeout(()=>{
+      next({"message" : "timed out"});
+    }, TIMEOUT);
 
+    await newsapi.v2.topHeadlines({
+      country : "in",
+      language : "en"
+    }, (err, data)=>{
+      if(err)return console.log(err);
+
+      res.json(data);
+
+    })
+
+});
 
 
 // listen for requests :)
